@@ -106,27 +106,68 @@ class ViewController: UIViewController {
             y = Double(symbols.remove(at: 0))!
             if (op == "*") {
                 if (floor(x * y) == x * y) {
-                    symbols.insert(String(Int(x * y)) , at: 0)
+                    if (String(Int(x * y)).characters.count > 7) {
+                        symbols.insert(String(Float(x * y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(Int(x * y)) , at: 0)
+                    }
                 } else {
-                    symbols.insert(String(x * y) , at: 0)
+                    if (String(Int(x * y)).characters.count > 7) {
+                        symbols.insert(String(Float(x * y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(x * y) , at: 0)
+                    }
+                    
                 }
             } else if (op == "/") {
-                if (floor(x / y) == x / y) {
-                    symbols.insert(String(Int(x / y)) , at: 0)
+                if (y == 0) {
+                    let alert = UIAlertController(title: "Alert", message: "0 Division Error", preferredStyle: UIAlertControllerStyle.alert)
+                    alert.addAction(UIAlertAction(title: "Click", style: UIAlertActionStyle.default, handler: nil))
+                    self.present(alert, animated: true, completion: nil)
+                    return "0"
+                } else if (floor(x / y) == x / y) {
+                    if (String(Int(x / y)).characters.count > 7) {
+                        symbols.insert(String(Float(x / y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(Int(x / y)) , at: 0)
+                    }
                 } else {
-                    symbols.insert(String(x / y) , at: 0)
+                    if (String(Int(x / y)).characters.count > 7) {
+                        symbols.insert(String(Float(x / y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(x / y) , at: 0)
+                    }
+                    
                 }
             } else if (op == "+") {
                 if (floor(x + y) == x + y) {
-                    symbols.insert(String(Int(x + y)) , at: 0)
+                    if (String(Int(x + y)).characters.count > 7) {
+                        symbols.insert(String(Float(x + y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(Int(x + y)) , at: 0)
+                    }
                 } else {
-                    symbols.insert(String(x + y) , at: 0)
+                    if (String(Int(x + y)).characters.count > 7) {
+                        symbols.insert(String(Float(x + y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(x + y) , at: 0)
+                    }
+                    
                 }
             } else if (op == "-") {
                 if (floor(x - y) == x - y) {
-                    symbols.insert(String(Int(x - y)) , at: 0)
+                    if (String(Int(x - y)).characters.count > 7) {
+                        symbols.insert(String(Float(x - y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(Int(x - y)) , at: 0)
+                    }
                 } else {
-                    symbols.insert(String(x - y) , at: 0)
+                    if (String(Int(x - y)).characters.count > 7) {
+                        symbols.insert(String(Float(x - y))[0..<7] , at: 0)
+                    } else {
+                        symbols.insert(String(x - y) , at: 0)
+                    }
+                    
                 }
             }
         }
@@ -138,6 +179,9 @@ class ViewController: UIViewController {
         guard Int(sender.content) != nil else { return }
         print("The number \(sender.content) was pressed")
         // Fill me in!
+        if (symbolParse[symbolParse.count - 1].characters.count >= 7) {
+            return
+        }
         if (symbolParse.count == 1 && symbolParse[0] == "0") {
             symbolParse = [sender.content]
         } else if(Int(symbolParse[symbolParse.count - 1]) != nil || symbolParse[symbolParse.count - 1].characters.count > 1) {
@@ -161,6 +205,14 @@ class ViewController: UIViewController {
         if (sender.content == "C") {
             symbolParse = ["0"]
             resultLabel.text = "0"
+        } else if (sender.content == "+/-") {
+            /* */
+            if symbolParse[symbolParse.count - 1][0] == "-" {
+                symbolParse[symbolParse.count - 1] = symbolParse[symbolParse.count - 1][1..<symbolParse[symbolParse.count - 1].characters.count]
+            } else {
+                symbolParse[symbolParse.count - 1] = "-" + symbolParse[symbolParse.count - 1]
+            }
+            resultLabel.text = symbolParse[symbolParse.count - 1]
         } else if (sender.content == "%") {
             /* Convert to percent. */
             let last = symbolParse.removeLast()
@@ -206,6 +258,9 @@ class ViewController: UIViewController {
     // REQUIRED: The responder to a number or operator button being pressed.
     func buttonPressed(_ sender: CustomButton) {
         // Fill me in!
+        if (symbolParse[symbolParse.count - 1].characters.count >= 7) {
+            return
+        }
         if (Int(symbolParse[symbolParse.count - 1]) != nil || symbolParse[symbolParse.count - 1][1]
  == ".") {
             if (sender.content == "." && symbolParse[symbolParse.count - 1].characters.last! != ".") {

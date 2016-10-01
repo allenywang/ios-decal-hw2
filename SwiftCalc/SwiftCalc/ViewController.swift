@@ -7,7 +7,20 @@
 //
 
 import UIKit
-
+extension String {
+    subscript(i: Int) -> String {
+        guard i >= 0 && i < characters.count else { return "" }
+        return String(self[index(startIndex, offsetBy: i)])
+    }
+    subscript(range: Range<Int>) -> String {
+        let lowerIndex = index(startIndex, offsetBy: max(0,range.lowerBound), limitedBy: endIndex) ?? endIndex
+        return substring(with: lowerIndex..<(index(lowerIndex, offsetBy: range.upperBound - range.lowerBound, limitedBy: endIndex) ?? endIndex))
+    }
+    subscript(range: ClosedRange<Int>) -> String {
+        let lowerIndex = index(startIndex, offsetBy: max(0,range.lowerBound), limitedBy: endIndex) ?? endIndex
+        return substring(with: lowerIndex..<(index(lowerIndex, offsetBy: range.upperBound - range.lowerBound + 1, limitedBy: endIndex) ?? endIndex))
+    }
+}
 class ViewController: UIViewController {
     // MARK: Width and Height of Screen for Layout
     var w: CGFloat!
@@ -22,6 +35,7 @@ class ViewController: UIViewController {
     // TODO: This looks like a good place to add some data structures.
     //       One data structure is initialized below for reference.
     var someDataStructure: [String] = [""]
+    var symbolParse: [String] = ["0"]
     
 
     override func viewDidLoad() {
@@ -47,6 +61,7 @@ class ViewController: UIViewController {
     //       Modify this one or create your own.
     func updateSomeDataStructure(_ content: String) {
         print("Update me like one of those PCs")
+        
     }
     
     // TODO: Ensure that resultLabel gets updated.
@@ -76,21 +91,138 @@ class ViewController: UIViewController {
         return 0.0
     }
     
+    func evaluate(_ symbols: [String]) -> String {
+        var symbols = symbols
+        if symbols.count == 1 {
+            return symbols[0]
+        }
+        var x: Double = 0.0
+        var op = ""
+        var y: Double = 0.0
+        print(symbols)
+        while (symbols.count > 1) {
+            x = Double(symbols.remove(at: 0))!
+            op = symbols.remove(at: 0)
+            y = Double(symbols.remove(at: 0))!
+            if (op == "*") {
+                if (floor(x * y) == x * y) {
+                    symbols.insert(String(Int(x * y)) , at: 0)
+                } else {
+                    symbols.insert(String(x * y) , at: 0)
+                }
+            } else if (op == "/") {
+                if (floor(x / y) == x / y) {
+                    symbols.insert(String(Int(x / y)) , at: 0)
+                } else {
+                    symbols.insert(String(x / y) , at: 0)
+                }
+            } else if (op == "+") {
+                if (floor(x + y) == x + y) {
+                    symbols.insert(String(Int(x + y)) , at: 0)
+                } else {
+                    symbols.insert(String(x + y) , at: 0)
+                }
+            } else if (op == "-") {
+                if (floor(x - y) == x - y) {
+                    symbols.insert(String(Int(x - y)) , at: 0)
+                } else {
+                    symbols.insert(String(x - y) , at: 0)
+                }
+            }
+        }
+        return symbols[0]
+    }
+    
     // REQUIRED: The responder to a number button being pressed.
     func numberPressed(_ sender: CustomButton) {
         guard Int(sender.content) != nil else { return }
         print("The number \(sender.content) was pressed")
         // Fill me in!
+        if (symbolParse.count == 1 && symbolParse[0] == "0") {
+            symbolParse = [sender.content]
+        } else if(Int(symbolParse[symbolParse.count - 1]) != nil || symbolParse[symbolParse.count - 1].characters.count > 1) {
+            symbolParse[symbolParse.count - 1] = symbolParse[symbolParse.count - 1] + sender.content
+        } else {
+            symbolParse.append(sender.content)
+        }
+        resultLabel.text = symbolParse[symbolParse.count - 1]
     }
     
     // REQUIRED: The responder to an operator button being pressed.
     func operatorPressed(_ sender: CustomButton) {
         // Fill me in!
+
+        /* If overiding previous operation. */
+        if (symbolParse[symbolParse.count - 1] == "*" || symbolParse[symbolParse.count - 1] == "/" || symbolParse[symbolParse.count - 1] == "+" || symbolParse[symbolParse.count - 1] == "-") {
+            symbolParse.removeLast()
+        }
+        
+        /* Clear Everything. */
+        if (sender.content == "C") {
+            symbolParse = ["0"]
+            resultLabel.text = "0"
+        } else if (sender.content == "%") {
+            /* Convert to percent. */
+            let last = symbolParse.removeLast()
+            resultLabel.text = String(Double(last)! / 100.0)
+            symbolParse.append(String(Double(last)! / 100.0))
+        } else {
+            if ((sender.content == "*" || sender.content == "/") && symbolParse.count > 1) {
+                /* For multiplication or division, evaluate till first addition or subtraction. */
+                var lastSymbol:String = symbolParse.removeLast()
+                var parseSubset:[String] = [lastSymbol]
+                while (symbolParse.count > 0) {
+                    lastSymbol = symbolParse.removeLast()
+                    if (lastSymbol == "+" || lastSymbol == "-") {
+                        break
+                    }
+                    parseSubset.insert(lastSymbol, at: 0)
+                }
+                if (symbolParse.count > 0) {
+                    symbolParse += [lastSymbol, evaluate(parseSubset)]
+                } else {
+                    symbolParse += [evaluate(parseSubset)]
+                }
+            } else {
+                /* First evaluate multiplication or division if needed. */
+                print(symbolParse)
+                if (symbolParse.count > 1) {
+                    let y = symbolParse.removeLast()
+                    let op = symbolParse.removeLast()
+                    let x = symbolParse.removeLast()
+                    symbolParse.append(evaluate([x, op, y]))
+                }
+                symbolParse = [evaluate(symbolParse)]
+            }
+            if (sender.content != "=") {
+                symbolParse.append(sender.content)
+                resultLabel.text = symbolParse[symbolParse.count - 2]
+            } else {
+                resultLabel.text = symbolParse[0]
+            }
+        }
     }
     
     // REQUIRED: The responder to a number or operator button being pressed.
     func buttonPressed(_ sender: CustomButton) {
-       // Fill me in!
+        // Fill me in!
+        if (Int(symbolParse[symbolParse.count - 1]) != nil || symbolParse[symbolParse.count - 1][1]
+ == ".") {
+            if (sender.content == "." && symbolParse[symbolParse.count - 1].characters.last! != ".") {
+                symbolParse[symbolParse.count - 1] = symbolParse[symbolParse.count - 1] + sender.content
+            } else {
+                if (Int(symbolParse[symbolParse.count - 1]) != 0) {
+                    symbolParse[symbolParse.count - 1] = symbolParse[symbolParse.count - 1] + sender.content
+                }
+            }
+        } else {
+            if (sender.content == ".") {
+                symbolParse.append("0.")
+            } else {
+                symbolParse.append(sender.content)
+            }
+        }
+        resultLabel.text = symbolParse[symbolParse.count - 1]
     }
     
     // IMPORTANT: Do NOT change any of the code below.
